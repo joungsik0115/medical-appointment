@@ -273,6 +273,20 @@ export function ChatPanel({ messages, setMessages, apiKey }: Props) {
           ))}
         </div>
       </div>
+
+      <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 leading-relaxed">
+        <span className="font-semibold">⚠️ 안내</span> 본 챗봇의 답변은 참고용이며 정확하지 않을 수 있습니다.
+        정확한 내용은{' '}
+        <a
+          href="https://chat.google.com/room/AAQATZFBR-o?cls=7"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold underline text-amber-900 hover:text-teal-700 transition-colors"
+        >
+          [문화] 총무팀 통합 문의 지원 스페이스 Help Desk
+        </a>
+        {' '}로 문의 부탁드립니다.
+      </div>
     </div>
   );
 }
