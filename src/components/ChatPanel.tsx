@@ -167,7 +167,7 @@ export function ChatPanel({ messages, setMessages, apiKey }: Props) {
         <div className="bg-teal-600 px-6 py-4">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xs">인총</span>
+              <span className="text-white font-bold text-xs">인총쌤</span>
             </div>
             <div>
               <p className="text-white font-semibold text-sm">인총쌤</p>
@@ -184,8 +184,8 @@ export function ChatPanel({ messages, setMessages, apiKey }: Props) {
           {messages.map(msg => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center mr-2.5 flex-shrink-0 mt-0.5 shadow-sm">
-                  <span className="text-teal-700 font-bold text-xs">인총</span>
+                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mr-2.5 flex-shrink-0 mt-0.5 shadow-sm">
+                  <span className="text-teal-700 font-bold text-xs">인총쌤</span>
                 </div>
               )}
               <div className={`max-w-xs lg:max-w-sm px-4 py-3 rounded-2xl text-sm leading-relaxed ${
@@ -200,7 +200,7 @@ export function ChatPanel({ messages, setMessages, apiKey }: Props) {
 
           {loading && (
             <div className="flex justify-start">
-              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center mr-2.5 flex-shrink-0 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mr-2.5 flex-shrink-0 shadow-sm">
                 <span className="text-teal-700 font-bold text-xs">인총</span>
               </div>
               <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100">
