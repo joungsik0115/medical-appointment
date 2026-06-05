@@ -5,7 +5,11 @@ import { Header } from './components/Header';
 import { ChatPanel } from './components/ChatPanel';
 
 export default function App() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('openrouter_key') || '');
+  const [apiKey, setApiKey] = useState(() =>
+    import.meta.env.VITE_OPENROUTER_KEY ||
+    localStorage.getItem('openrouter_key') ||
+    ''
+  );
   const [messages, setMessages] = useState<Message[]>([]);
 
   if (!apiKey) {
