@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Message } from '../types';
 import { chat } from '../services/openrouter';
+import { KNOWLEDGE } from '../data/rules';
 
 const SYSTEM_PROMPT = `# 역할 및 정체성
 당신은 은성의료재단 좋은문화병원 인사총무팀의 사내 AI 안내 챗봇 "인총쌤(In-chong-ssaem)"입니다.
@@ -43,7 +44,12 @@ const SYSTEM_PROMPT = `# 역할 및 정체성
 
 # 최신성
 - 규정 개정일을 인지하고, 필요 시 "기준일: ○○○○.○○.○○ 개정본"임을 안내한다.
-- 동일 규정의 버전이 여럿이면 최신 개정본을 우선하고, 구버전 기준으로 답하지 않는다.`;
+- 동일 규정의 버전이 여럿이면 최신 개정본을 우선하고, 구버전 기준으로 답하지 않는다.
+
+# 사내 규정 원문 데이터
+아래는 실제 사내 문서에서 추출한 원문입니다. 반드시 이 내용을 근거로 답변하세요.
+
+${KNOWLEDGE}`;
 
 const QUICK_QUESTIONS = [
   '부친상 경조휴가 며칠인가요?',
