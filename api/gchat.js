@@ -1,8 +1,10 @@
 // 인총쌤 Google Chat HTTP Endpoint — Vercel Serverless Function
 
 const MODELS = [
-  'google/gemma-4-31b-it:free',
   'meta-llama/llama-3.3-70b-instruct:free',
+  'google/gemma-4-31b-it:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'nousresearch/hermes-3-llama-3.1-405b:free',
 ];
 
 const KNOWLEDGE = `
@@ -191,16 +193,24 @@ async function callAI(question) {
           'X-Title': 'IntchongSaem-GChat',
         },
         body: JSON.stringify({ model, messages, max_tokens: 500 }),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(10000),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        const content = data?.choices?.[0]?.message?.content?.trim();
-        if (content) return content;
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        console.log(`AI_FAIL ${model} status=${res.status} body=${errBody.slice(0, 200)}`);
+        continue;
       }
+
+      const data = await res.json();
+      const content = data?.choices?.[0]?.message?.content?.trim();
+      if (content) {
+        console.log(`AI_OK ${model} len=${content.length}`);
+        return content;
+      }
+      console.log(`AI_EMPTY ${model} data=${JSON.stringify(data).slice(0, 200)}`);
     } catch (e) {
-      console.error(`모델 ${model} 오류:`, e.message);
+      console.log(`AI_THROW ${model} err=${e?.message}`);
     }
   }
 
