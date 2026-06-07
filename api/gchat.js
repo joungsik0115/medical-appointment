@@ -3,8 +3,6 @@
 const MODELS = [
   'google/gemma-4-31b-it:free',
   'meta-llama/llama-3.3-70b-instruct:free',
-  'qwen/qwen3-next-80b-a3b-instruct:free',
-  'nousresearch/hermes-3-llama-3.1-405b:free',
 ];
 
 const KNOWLEDGE = `
@@ -192,8 +190,8 @@ async function callAI(question) {
           'HTTP-Referer': 'https://medical-appointment-nine.vercel.app',
           'X-Title': 'IntchongSaem-GChat',
         },
-        body: JSON.stringify({ model, messages, max_tokens: 1000 }),
-        signal: AbortSignal.timeout(25000),
+        body: JSON.stringify({ model, messages, max_tokens: 500 }),
+        signal: AbortSignal.timeout(12000),
       });
 
       if (res.ok) {
