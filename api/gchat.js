@@ -173,9 +173,59 @@ const SYSTEM_PROMPT = `# 역할 및 정체성
 # 사내 규정 원문 데이터
 ${KNOWLEDGE}`;
 
-async function callAI(question) {
+const GEMINI_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-3.5-flash',
+  'gemini-2.0-flash',
+];
+
+async function callGemini(question) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error('GEMINI_API_KEY 없음');
+
+  for (const model of GEMINI_MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: 'user', parts: [{ text: question }] }],
+            generationConfig: {
+              maxOutputTokens: 800,
+              temperature: 0.7,
+              thinkingConfig: { thinkingBudget: 0 },
+            },
+          }),
+          signal: AbortSignal.timeout(15000),
+        }
+      );
+
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        console.log(`GEMINI_FAIL ${model} status=${res.status} body=${errBody.slice(0, 200)}`);
+        continue;
+      }
+
+      const data = await res.json();
+      const content = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (content) {
+        console.log(`GEMINI_OK ${model} len=${content.length}`);
+        return content;
+      }
+      console.log(`GEMINI_EMPTY ${model} data=${JSON.stringify(data).slice(0, 200)}`);
+    } catch (e) {
+      console.log(`GEMINI_THROW ${model} err=${e?.message}`);
+    }
+  }
+  return null;
+}
+
+async function callOpenRouter(question) {
   const key = process.env.VITE_OPENROUTER_KEY || process.env.OPENROUTER_KEY;
-  if (!key) throw new Error('OPENROUTER_KEY 환경변수 없음');
+  if (!key) return null;
 
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -193,26 +243,34 @@ async function callAI(question) {
           'X-Title': 'IntchongSaem-GChat',
         },
         body: JSON.stringify({ model, messages, max_tokens: 500 }),
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (!res.ok) {
         const errBody = await res.text().catch(() => '');
-        console.log(`AI_FAIL ${model} status=${res.status} body=${errBody.slice(0, 200)}`);
+        console.log(`OR_FAIL ${model} status=${res.status} body=${errBody.slice(0, 150)}`);
         continue;
       }
 
       const data = await res.json();
       const content = data?.choices?.[0]?.message?.content?.trim();
       if (content) {
-        console.log(`AI_OK ${model} len=${content.length}`);
+        console.log(`OR_OK ${model} len=${content.length}`);
         return content;
       }
-      console.log(`AI_EMPTY ${model} data=${JSON.stringify(data).slice(0, 200)}`);
     } catch (e) {
-      console.log(`AI_THROW ${model} err=${e?.message}`);
+      console.log(`OR_THROW ${model} err=${e?.message}`);
     }
   }
+  return null;
+}
+
+async function callAI(question) {
+  const gemini = await callGemini(question);
+  if (gemini) return gemini;
+
+  const openrouter = await callOpenRouter(question);
+  if (openrouter) return openrouter;
 
   return '죄송합니다, 일시적 오류가 발생했습니다. 인사총무팀 내선 820으로 문의해 주세요.';
 }
