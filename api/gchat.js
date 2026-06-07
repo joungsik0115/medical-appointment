@@ -207,32 +207,58 @@ async function callAI(question) {
   return '죄송합니다, 일시적 오류가 발생했습니다. 인사총무팀 내선 820으로 문의해 주세요.';
 }
 
+function extractMessageText(event) {
+  return (
+    event?.message?.text ||
+    event?.chat?.messagePayload?.message?.text ||
+    event?.commonEventObject?.parameters?.text ||
+    ''
+  );
+}
+
+function extractEventType(event) {
+  return (
+    event?.type ||
+    event?.chat?.type ||
+    event?.eventType ||
+    (event?.message ? 'MESSAGE' : null) ||
+    (event?.chat?.messagePayload?.message ? 'MESSAGE' : null) ||
+    (event?.chat?.addedToSpacePayload ? 'ADDED_TO_SPACE' : null) ||
+    (event?.chat?.removedFromSpacePayload ? 'REMOVED_FROM_SPACE' : null)
+  );
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const event = req.body;
-  const type = event?.type;
+  try {
+    const event = req.body || {};
+    console.log('GCHAT_EVENT:', JSON.stringify(event));
 
-  if (type === 'ADDED_TO_SPACE') {
-    const spaceName = event?.space?.displayName || '스페이스';
-    return res.json({
-      text:
-        `✅ '${spaceName}'에 인총쌤이 연결되었습니다!\n\n` +
-        `안녕하세요! 좋은문화병원 인사총무팀 AI 챗봇 '인총쌤'입니다 😊\n` +
-        `복지·휴가·경조사·취업규칙·근로기준법 등 궁금한 점을 @인총쌤 으로 물어보세요.\n\n` +
-        `📞 인사총무팀 내선: 820`,
-    });
-  }
+    const type = extractEventType(event);
+    console.log('GCHAT_TYPE:', type);
 
-  if (type === 'REMOVED_FROM_SPACE') {
-    return res.status(200).end();
-  }
+    if (type === 'ADDED_TO_SPACE') {
+      const spaceName =
+        event?.space?.displayName || event?.chat?.addedToSpacePayload?.space?.displayName || '스페이스';
+      return res.json({
+        text:
+          `✅ '${spaceName}'에 인총쌤이 연결되었습니다!\n\n` +
+          `안녕하세요! 좋은문화병원 인사총무팀 AI 챗봇 '인총쌤'입니다 😊\n` +
+          `복지·휴가·경조사·취업규칙·근로기준법 등 궁금한 점을 @인총쌤 으로 물어보세요.\n\n` +
+          `📞 인사총무팀 내선: 820`,
+      });
+    }
 
-  if (type === 'MESSAGE') {
-    const rawText = event?.message?.text || '';
+    if (type === 'REMOVED_FROM_SPACE') {
+      return res.status(200).json({});
+    }
+
+    const rawText = extractMessageText(event);
     const question = rawText.replace(/<users\/[^>]+>/g, '').replace(/@인총쌤/g, '').trim();
+    console.log('GCHAT_QUESTION:', question);
 
     if (!question) {
       return res.json({
@@ -244,8 +270,12 @@ export default async function handler(req, res) {
     }
 
     const answer = await callAI(question);
+    console.log('GCHAT_ANSWER_LEN:', answer.length);
     return res.json({ text: answer });
+  } catch (err) {
+    console.error('GCHAT_ERROR:', err?.message, err?.stack);
+    return res.json({
+      text: '죄송합니다, 일시적 오류가 발생했습니다. 인사총무팀 내선 820으로 문의해 주세요.',
+    });
   }
-
-  return res.status(200).json({ text: '' });
 }
